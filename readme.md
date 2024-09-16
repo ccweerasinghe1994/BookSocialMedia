@@ -161,6 +161,49 @@
   - [7. **Security Configuration**](#7-security-configuration)
   - [8. **Database Schema Representation**](#8-database-schema-representation)
   - [9. **Conclusion and Best Practices**](#9-conclusion-and-best-practices)
+- [Repository Layer for Role, Token and User Entities](#repository-layer-for-role-token-and-user-entities)
+  - [Table of Contents](#table-of-contents-2)
+  - [1. Understanding Spring Data JPA Repositories](#1-understanding-spring-data-jpa-repositories)
+    - [What is Spring Data JPA?](#what-is-spring-data-jpa)
+    - [What is `JpaRepository`?](#what-is-jparepository)
+    - [Benefits of Using Spring Data JPA Repositories](#benefits-of-using-spring-data-jpa-repositories)
+  - [2. RoleRepository](#2-rolerepository)
+    - [Code Overview](#code-overview-4)
+    - [Detailed Explanation](#detailed-explanation)
+    - [Example Usage](#example-usage-3)
+      - [Role Service Example](#role-service-example)
+      - [Usage in a Controller](#usage-in-a-controller)
+      - [Explanation of Example Usage](#explanation-of-example-usage)
+    - [Practical Example](#practical-example)
+  - [3. TokenRepository](#3-tokenrepository)
+    - [Code Overview](#code-overview-5)
+    - [Detailed Explanation](#detailed-explanation-1)
+    - [Example Usage](#example-usage-4)
+      - [Token Service Example](#token-service-example)
+      - [Usage in a Registration Flow](#usage-in-a-registration-flow)
+      - [Explanation of Example Usage](#explanation-of-example-usage-1)
+  - [4. UserRepository](#4-userrepository)
+    - [Code Overview](#code-overview-6)
+    - [Detailed Explanation](#detailed-explanation-2)
+    - [Example Usage](#example-usage-5)
+      - [User Service Example](#user-service-example)
+      - [Explanation of Example Usage](#explanation-of-example-usage-2)
+    - [Practical Example](#practical-example-1)
+  - [5. Integration with Services and Controllers](#5-integration-with-services-and-controllers)
+    - [User Registration Flow](#user-registration-flow)
+    - [Email Verification Flow](#email-verification-flow)
+    - [Example Controller for Authentication](#example-controller-for-authentication)
+  - [6. Best Practices and Advanced Features](#6-best-practices-and-advanced-features)
+    - [Custom Query Methods](#custom-query-methods)
+    - [Handling Optional Results](#handling-optional-results)
+    - [Transactions](#transactions)
+    - [Pagination and Sorting](#pagination-and-sorting)
+    - [Custom Queries with JPQL or Native SQL](#custom-queries-with-jpql-or-native-sql)
+    - [Projections and DTOs](#projections-and-dtos)
+    - [Indexing and Performance Optimization](#indexing-and-performance-optimization)
+    - [Exception Handling](#exception-handling)
+    - [Unit and Integration Testing](#unit-and-integration-testing)
+  - [7. Conclusion](#7-conclusion-2)
 
 
 # pom.xml
@@ -6138,3 +6181,1041 @@ The provided code snippets form a solid foundation for a user management system 
    - Write unit and integration tests to ensure that the authentication flow, role assignments, and token validations work as expected.
 
 By adhering to these practices and continually refining the system based on requirements and feedback, you can build a robust and secure user management system within your Spring Boot application.
+
+# Repository Layer for Role, Token and User Entities
+
+
+```java
+package com.wchamara.book.role;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface RoleRepository extends JpaRepository<Role, Integer> {
+
+    Optional<Role> findByName(String role);
+}
+
+```
+
+```java
+package com.wchamara.book.user;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface TokenRepository extends JpaRepository<Token, Integer>{
+
+    Optional<Token> findByToken(String token);
+}
+
+```
+
+```java
+package com.wchamara.book.user;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Integer> {
+    Optional<User> findByEmail(String email);
+}
+
+```
+
+Certainly! Let's delve deeply into the three repository interfaces you've provided: `RoleRepository`, `TokenRepository`, and `UserRepository`. These repositories are fundamental components in your Spring Boot application's data access layer, leveraging Spring Data JPA to interact seamlessly with the underlying database. We'll explore each repository's structure, functionality, and practical usage with detailed examples.
+
+---
+
+## Table of Contents
+
+1. [Understanding Spring Data JPA Repositories](#1-understanding-spring-data-jpa-repositories)
+2. [RoleRepository](#2-rolerepository)
+    - [Code Overview](#code-overview)
+    - [Detailed Explanation](#detailed-explanation)
+    - [Example Usage](#example-usage)
+3. [TokenRepository](#3-tokenrepository)
+    - [Code Overview](#code-overview-1)
+    - [Detailed Explanation](#detailed-explanation-1)
+    - [Example Usage](#example-usage-1)
+4. [UserRepository](#4-userrepository)
+    - [Code Overview](#code-overview-2)
+    - [Detailed Explanation](#detailed-explanation-2)
+    - [Example Usage](#example-usage-2)
+5. [Integration with Services and Controllers](#5-integration-with-services-and-controllers)
+    - [User Registration Flow](#user-registration-flow)
+    - [Email Verification Flow](#email-verification-flow)
+6. [Best Practices and Advanced Features](#6-best-practices-and-advanced-features)
+    - [Custom Query Methods](#custom-query-methods)
+    - [Handling Optional Results](#handling-optional-results)
+    - [Transactions](#transactions)
+    - [Pagination and Sorting](#pagination-and-sorting)
+    - [Custom Queries with JPQL or Native SQL](#custom-queries-with-jpql-or-native-sql)
+    - [Projections and DTOs](#projections-and-dtos)
+    - [Indexing and Performance Optimization](#indexing-and-performance-optimization)
+    - [Exception Handling](#exception-handling)
+    - [Unit and Integration Testing](#unit-and-integration-testing)
+7. [Conclusion](#7-conclusion)
+
+---
+
+## 1. Understanding Spring Data JPA Repositories
+
+### What is Spring Data JPA?
+
+Spring Data JPA is a part of the larger Spring Data family, aimed at simplifying data access and persistence in Spring applications. It provides a repository abstraction over the data access layer, eliminating much of the boilerplate code required to interact with databases.
+
+### What is `JpaRepository`?
+
+`JpaRepository` is a JPA-specific extension of the `Repository` interface in Spring Data. It provides a comprehensive set of CRUD (Create, Read, Update, Delete) operations and additional JPA-related functionality. By extending `JpaRepository`, your repository interfaces inherit these methods without needing to implement them manually.
+
+**Key Features of `JpaRepository`:**
+
+- **CRUD Operations**: Methods like `save()`, `findById()`, `findAll()`, `delete()`, etc.
+- **Paging and Sorting**: Methods that support pagination and sorting, such as `findAll(Pageable pageable)`.
+- **Custom Query Methods**: Ability to define query methods based on method naming conventions.
+- **JPA Annotations Support**: Support for JPA-specific annotations and features.
+
+### Benefits of Using Spring Data JPA Repositories
+
+- **Reduced Boilerplate Code**: No need to implement common data access methods.
+- **Consistency**: Standardized approach to data access across the application.
+- **Customization**: Ability to define custom queries using method names or JPQL/SQL.
+- **Integration**: Seamless integration with Spring's dependency injection and other Spring features.
+
+---
+
+## 2. RoleRepository
+
+### Code Overview
+
+```java
+package com.wchamara.book.role;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface RoleRepository extends JpaRepository<Role, Integer> {
+
+    Optional<Role> findByName(String role);
+}
+```
+
+### Detailed Explanation
+
+- **Interface Definition**: `RoleRepository` is an interface that extends `JpaRepository<Role, Integer>`.
+  
+  - **`Role`**: The entity type that this repository manages.
+  - **`Integer`**: The type of the primary key (ID) of the `Role` entity.
+
+- **Inherited Methods**: By extending `JpaRepository`, `RoleRepository` inherits a suite of methods for performing CRUD operations, such as:
+  
+  - **`save(Role entity)`**: Save a role to the database.
+  - **`findById(Integer id)`**: Find a role by its ID.
+  - **`findAll()`**: Retrieve all roles.
+  - **`delete(Role entity)`**: Delete a role.
+
+- **Custom Method**: `Optional<Role> findByName(String role)`
+
+  - **Purpose**: Retrieve a `Role` entity based on its `name` field.
+  - **Return Type**: `Optional<Role>` ensures that the method handles the case where a role with the specified name might not exist, preventing `NullPointerException`.
+  - **Method Naming Convention**: Spring Data JPA interprets `findByName` as a query that selects roles where the `name` field matches the provided parameter.
+
+### Example Usage
+
+Let's explore how to use `RoleRepository` in a service class to manage roles.
+
+#### Role Service Example
+
+```java
+@Service
+public class RoleService {
+
+    private final RoleRepository roleRepository;
+
+    @Autowired
+    public RoleService(RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
+    }
+
+    /**
+     * Creates a new role if it does not already exist.
+     */
+    public Role createRole(String roleName) {
+        // Check if the role already exists
+        Optional<Role> existingRole = roleRepository.findByName(roleName);
+        if (existingRole.isPresent()) {
+            throw new IllegalArgumentException("Role already exists");
+        }
+
+        // Create and save the new role
+        Role role = Role.builder()
+                .name(roleName)
+                .build();
+        return roleRepository.save(role);
+    }
+
+    /**
+     * Retrieves a role by name.
+     */
+    public Role getRoleByName(String roleName) {
+        return roleRepository.findByName(roleName)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+    }
+
+    /**
+     * Retrieves all roles.
+     */
+    public List<Role> getAllRoles() {
+        return roleRepository.findAll();
+    }
+}
+```
+
+#### Usage in a Controller
+
+```java
+@RestController
+@RequestMapping("/api/roles")
+public class RoleController {
+
+    private final RoleService roleService;
+
+    @Autowired
+    public RoleController(RoleService roleService) {
+        this.roleService = roleService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Role> createRole(@RequestBody RoleDto roleDto) {
+        Role createdRole = roleService.createRole(roleDto.getName());
+        return new ResponseEntity<>(createdRole, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{name}")
+    public ResponseEntity<Role> getRoleByName(@PathVariable String name) {
+        Role role = roleService.getRoleByName(name);
+        return ResponseEntity.ok(role);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Role>> getAllRoles() {
+        List<Role> roles = roleService.getAllRoles();
+        return ResponseEntity.ok(roles);
+    }
+}
+```
+
+#### Explanation of Example Usage
+
+1. **Creating a Role**:
+   - **Endpoint**: `POST /api/roles`
+   - **Request Body**: JSON containing the role name.
+   - **Process**:
+     - The controller calls `roleService.createRole()` with the provided role name.
+     - `RoleService` checks if a role with that name already exists using `findByName()`.
+     - If not, it creates a new `Role` entity and saves it using `save()`.
+
+2. **Retrieving a Role by Name**:
+   - **Endpoint**: `GET /api/roles/{name}`
+   - **Path Variable**: `name` - the name of the role.
+   - **Process**:
+     - The controller calls `roleService.getRoleByName()` with the role name.
+     - `RoleService` retrieves the role using `findByName()`.
+     - If the role exists, it is returned; otherwise, an exception is thrown.
+
+3. **Retrieving All Roles**:
+   - **Endpoint**: `GET /api/roles`
+   - **Process**:
+     - The controller calls `roleService.getAllRoles()`.
+     - `RoleService` uses `findAll()` to retrieve all roles from the database.
+
+### Practical Example
+
+Suppose you want to assign a role to a user during registration.
+
+```java
+@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public UserService(UserRepository userRepository, RoleRepository roleRepository,
+                       PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    public User registerNewUser(UserRegistrationDto registrationDto) {
+        if (userRepository.findByEmail(registrationDto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+
+        // Fetch the 'USER' role
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("USER role not found"));
+
+        // Create new user
+        User user = User.builder()
+                .firstname(registrationDto.getFirstname())
+                .lastname(registrationDto.getLastname())
+                .dateOfBirth(registrationDto.getDateOfBirth())
+                .email(registrationDto.getEmail())
+                .password(passwordEncoder.encode(registrationDto.getPassword()))
+                .accountLocked(false)
+                .enabled(false) // Initially disabled until email verification
+                .roles(List.of(userRole))
+                .build();
+
+        return userRepository.save(user);
+    }
+}
+```
+
+**Explanation:**
+
+- The `UserService` class handles user registration.
+- It uses `RoleRepository` to fetch the "USER" role.
+- The role is then assigned to the new user by setting the `roles` list.
+- Finally, the user is saved to the database.
+
+---
+
+## 3. TokenRepository
+
+### Code Overview
+
+```java
+package com.wchamara.book.user;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface TokenRepository extends JpaRepository<Token, Integer>{
+
+    Optional<Token> findByToken(String token);
+}
+```
+
+### Detailed Explanation
+
+- **Interface Definition**: `TokenRepository` extends `JpaRepository<Token, Integer>`.
+  
+  - **`Token`**: The entity type managed by this repository.
+  - **`Integer`**: The type of the primary key of the `Token` entity.
+
+- **Inherited Methods**: Similar to `RoleRepository`, `TokenRepository` inherits CRUD and other standard methods.
+
+- **Custom Method**: `Optional<Token> findByToken(String token)`
+
+  - **Purpose**: Retrieve a `Token` entity based on its `token` field.
+  - **Return Type**: `Optional<Token>` handles the case where no token matches the provided string.
+
+### Example Usage
+
+Let's consider scenarios such as token creation (e.g., for email verification or password reset) and token validation.
+
+#### Token Service Example
+
+```java
+@Service
+public class TokenService {
+
+    private final TokenRepository tokenRepository;
+    private final UserRepository userRepository;
+
+    @Autowired
+    public TokenService(TokenRepository tokenRepository, UserRepository userRepository) {
+        this.tokenRepository = tokenRepository;
+        this.userRepository = userRepository;
+    }
+
+    /**
+     * Creates a new token for the given user.
+     */
+    public Token createTokenForUser(User user) {
+        String tokenString = UUID.randomUUID().toString();
+        LocalDateTime now = LocalDateTime.now();
+
+        Token token = Token.builder()
+                .token(tokenString)
+                .createdAt(now)
+                .expiresAt(now.plusHours(24))
+                .user(user)
+                .build();
+
+        return tokenRepository.save(token);
+    }
+
+    /**
+     * Validates the token and returns the associated user if valid.
+     */
+    public User validateToken(String tokenString) {
+        Token token = tokenRepository.findByToken(tokenString)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+
+        if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Token has expired");
+        }
+
+        if (token.getValidatedAt() != null) {
+            throw new IllegalArgumentException("Token has already been used");
+        }
+
+        // Mark token as validated
+        token.setValidatedAt(LocalDateTime.now());
+        tokenRepository.save(token);
+
+        return token.getUser();
+    }
+}
+```
+
+#### Usage in a Registration Flow
+
+1. **User Registration**:
+   - After creating a new user, generate a token for email verification.
+
+2. **Email Verification**:
+   - User clicks on the verification link containing the token.
+   - The system validates the token and activates the user account.
+
+**Example Code Snippets:**
+
+```java
+@Service
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final TokenService tokenService;
+    private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public UserService(UserRepository userRepository, RoleRepository roleRepository,
+                       TokenService tokenService, EmailService emailService,
+                       PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.tokenService = tokenService;
+        this.emailService = emailService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    public User registerNewUser(UserRegistrationDto registrationDto) {
+        if (userRepository.findByEmail(registrationDto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("USER role not found"));
+
+        User user = User.builder()
+                .firstname(registrationDto.getFirstname())
+                .lastname(registrationDto.getLastname())
+                .dateOfBirth(registrationDto.getDateOfBirth())
+                .email(registrationDto.getEmail())
+                .password(passwordEncoder.encode(registrationDto.getPassword()))
+                .accountLocked(false)
+                .enabled(false) // Initially disabled until email verification
+                .roles(List.of(userRole))
+                .build();
+
+        user = userRepository.save(user);
+
+        // Generate and save token
+        Token token = tokenService.createTokenForUser(user);
+
+        // Send verification email
+        emailService.sendVerificationEmail(user.getEmail(), token.getToken());
+
+        return user;
+    }
+
+    public void verifyUser(String tokenString) {
+        User user = tokenService.validateToken(tokenString);
+        user.setEnabled(true);
+        userRepository.save(user);
+    }
+}
+```
+
+#### Explanation of Example Usage
+
+1. **Registration**:
+   - A new user is created and saved to the database with `enabled = false`.
+   - A token is generated for this user using `TokenService.createTokenForUser()`.
+   - An email is sent to the user containing the verification token.
+
+2. **Verification**:
+   - When the user clicks the verification link, the token is validated using `TokenService.validateToken()`.
+   - If valid, the user's `enabled` field is set to `true`, allowing them to authenticate.
+
+---
+
+## 4. UserRepository
+
+### Code Overview
+
+```java
+package com.wchamara.book.user;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Integer> {
+    Optional<User> findByEmail(String email);
+}
+```
+
+### Detailed Explanation
+
+- **Interface Definition**: `UserRepository` extends `JpaRepository<User, Integer>`.
+  
+  - **`User`**: The entity type managed by this repository.
+  - **`Integer`**: The type of the primary key of the `User` entity.
+
+- **Inherited Methods**: Provides standard CRUD operations via `JpaRepository`.
+
+- **Custom Method**: `Optional<User> findByEmail(String email)`
+
+  - **Purpose**: Retrieve a `User` entity based on its `email` field.
+  - **Return Type**: `Optional<User>` handles the case where a user with the specified email may not exist.
+
+### Example Usage
+
+Let's explore how to use `UserRepository` in various scenarios such as user registration, authentication, and profile management.
+
+#### User Service Example
+
+```java
+@Service
+public class UserService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final TokenService tokenService;
+    private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public UserService(UserRepository userRepository, RoleRepository roleRepository,
+                       TokenService tokenService, EmailService emailService,
+                       PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.tokenService = tokenService;
+        this.emailService = emailService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    /**
+     * Registers a new user and sends an email verification token.
+     */
+    public User registerNewUser(UserRegistrationDto registrationDto) {
+        if (userRepository.findByEmail(registrationDto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("USER role not found"));
+
+        User user = User.builder()
+                .firstname(registrationDto.getFirstname())
+                .lastname(registrationDto.getLastname())
+                .dateOfBirth(registrationDto.getDateOfBirth())
+                .email(registrationDto.getEmail())
+                .password(passwordEncoder.encode(registrationDto.getPassword()))
+                .accountLocked(false)
+                .enabled(false)
+                .roles(List.of(userRole))
+                .build();
+
+        user = userRepository.save(user);
+
+        // Generate and save token
+        Token token = tokenService.createTokenForUser(user);
+
+        // Send verification email
+        emailService.sendVerificationEmail(user.getEmail(), token.getToken());
+
+        return user;
+    }
+
+    /**
+     * Loads a user by username (email) for Spring Security authentication.
+     */
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
+
+    /**
+     * Updates user profile.
+     */
+    public User updateUserProfile(Integer userId, UserProfileDto profileDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setFirstname(profileDto.getFirstname());
+        user.setLastname(profileDto.getLastname());
+        user.setDateOfBirth(profileDto.getDateOfBirth());
+
+        // Optionally update email or password
+        if (profileDto.getEmail() != null && !profileDto.getEmail().equals(user.getEmail())) {
+            if (userRepository.findByEmail(profileDto.getEmail()).isPresent()) {
+                throw new IllegalArgumentException("Email already in use");
+            }
+            user.setEmail(profileDto.getEmail());
+            user.setEnabled(false); // Require re-verification
+            Token token = tokenService.createTokenForUser(user);
+            emailService.sendVerificationEmail(user.getEmail(), token.getToken());
+        }
+
+        if (profileDto.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(profileDto.getPassword()));
+        }
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Retrieves user by ID.
+     */
+    public User getUserById(Integer userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+}
+```
+
+#### Explanation of Example Usage
+
+1. **Registering a New User**:
+   - **Email Uniqueness Check**: `findByEmail()` is used to check if a user with the given email already exists.
+   - **Role Assignment**: The "USER" role is fetched and assigned to the new user.
+   - **Password Encryption**: The user's password is encoded using `PasswordEncoder`.
+   - **Saving User**: The new user is saved to the database using `userRepository.save()`.
+   - **Token Generation and Email Sending**: A token is created for email verification, and an email is sent to the user with the token.
+
+2. **Loading User for Authentication**:
+   - **Implementation of `UserDetailsService`**: The `UserService` implements `UserDetailsService` to integrate with Spring Security.
+   - **`loadUserByUsername` Method**: Uses `findByEmail()` to retrieve the user based on the provided email. If not found, throws `UsernameNotFoundException`.
+
+3. **Updating User Profile**:
+   - **Fetching User by ID**: Uses `findById()` to retrieve the user to update.
+   - **Updating Fields**: Updates fields like firstname, lastname, dateOfBirth, and optionally email and password.
+   - **Email Update**: If the email is updated, checks for uniqueness using `findByEmail()`, disables the user, creates a new token, and sends a verification email.
+   - **Password Update**: If the password is provided, it is encoded before saving.
+   - **Saving Changes**: Updates are saved using `userRepository.save()`.
+
+4. **Retrieving a User by ID**:
+   - **`getUserById` Method**: Fetches a user by their primary key using `findById()`.
+
+### Practical Example
+
+**Authentication Flow with Spring Security:**
+
+1. **User Attempts to Login**:
+   - The user provides their email and password.
+   
+2. **Spring Security Calls `loadUserByUsername`**:
+   - Spring Security uses the `UserService.loadUserByUsername()` method to load the user details.
+   - `UserRepository.findByEmail(email)` retrieves the user entity.
+   - If the user is found, their details (including roles) are returned to Spring Security.
+   - If the user is not found, an exception is thrown, and authentication fails.
+
+3. **Spring Security Validates Credentials**:
+   - Spring Security compares the provided password with the encoded password from the user entity using `PasswordEncoder`.
+   - It also checks other flags like `isAccountNonLocked`, `isEnabled`, etc., as defined in the `User` entity.
+
+4. **Authentication Success or Failure**:
+   - If all checks pass, the user is authenticated and granted access based on their roles.
+   - If any check fails, authentication is denied.
+
+**Example Code in Security Configuration:**
+
+```java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public SecurityConfig(UserService userService, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userService)
+            .passwordEncoder(passwordEncoder);
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+            .csrf().disable() // Enable CSRF protection in production
+            .authorizeRequests()
+                .antMatchers("/api/auth/**").permitAll() // Allow public access to auth endpoints
+                .anyRequest().authenticated() // Secure all other endpoints
+            .and()
+            .formLogin(); // Enable form-based login
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+```
+
+**Explanation:**
+
+- **`configure(AuthenticationManagerBuilder auth)`**:
+  - Configures Spring Security to use `UserService` as the `UserDetailsService`.
+  - Specifies the `PasswordEncoder` to use for password matching.
+
+- **`configure(HttpSecurity http)`**:
+  - Disables CSRF protection for simplicity (not recommended in production).
+  - Permits all requests to `/api/auth/**` (e.g., registration, login).
+  - Requires authentication for all other requests.
+  - Enables form-based login.
+
+---
+
+## 5. Integration with Services and Controllers
+
+To fully understand how these repositories work together, let's walk through a typical user registration and email verification flow.
+
+### User Registration Flow
+
+1. **User Submits Registration Details**:
+   - Endpoint: `POST /api/auth/register`
+   - Request Body: JSON containing `firstname`, `lastname`, `email`, `password`, etc.
+
+2. **Controller Receives Request**:
+   - The controller delegates the registration process to the `UserService`.
+
+3. **UserService Processes Registration**:
+   - **Email Uniqueness Check**: Uses `UserRepository.findByEmail()` to ensure the email isn't already registered.
+   - **Role Assignment**: Retrieves the "USER" role using `RoleRepository.findByName()`.
+   - **Password Encryption**: Encodes the user's password.
+   - **User Creation**: Constructs a new `User` entity and saves it using `UserRepository.save()`.
+   - **Token Generation**: Creates a verification token using `TokenService.createTokenForUser()`.
+   - **Email Sending**: Sends a verification email containing the token using `EmailService.sendVerificationEmail()`.
+
+4. **Response Sent to Client**:
+   - The controller responds with a success message indicating that registration was successful and that a verification email has been sent.
+
+### Email Verification Flow
+
+1. **User Clicks Verification Link**:
+   - The link contains the token, e.g., `GET /api/auth/verify?token=abcdefg`.
+
+2. **Controller Receives Verification Request**:
+   - The controller extracts the token from the request parameters and delegates verification to the `UserService`.
+
+3. **UserService Validates Token**:
+   - **Token Retrieval**: Uses `TokenRepository.findByToken()` to fetch the token.
+   - **Token Validation**:
+     - Checks if the token exists.
+     - Verifies that the token hasn't expired.
+     - Ensures the token hasn't already been used.
+   - **User Activation**: Sets the user's `enabled` field to `true` using `UserRepository.save()`.
+   - **Token Update**: Marks the token as validated by setting `validatedAt`.
+
+4. **Response Sent to Client**:
+   - The controller responds with a success message indicating that the email has been verified and the account is now active.
+
+### Example Controller for Authentication
+
+```java
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    private final UserService userService;
+    private final TokenService tokenService;
+
+    @Autowired
+    public AuthController(UserService userService, TokenService tokenService) {
+        this.userService = userService;
+        this.tokenService = tokenService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> registerUser(@RequestBody UserRegistrationDto registrationDto) {
+        userService.registerNewUser(registrationDto);
+        return new ResponseEntity<>("User registered successfully. Please check your email for verification.", HttpStatus.CREATED);
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyUser(@RequestParam("token") String token) {
+        userService.verifyUser(token);
+        return ResponseEntity.ok("Email verified successfully. You can now log in.");
+    }
+
+    // Additional endpoints like login can be added here
+}
+```
+
+**Explanation:**
+
+- **`registerUser` Endpoint**:
+  - Receives user registration details.
+  - Calls `userService.registerNewUser()` to handle the registration logic.
+  - Responds with a success message.
+
+- **`verifyUser` Endpoint**:
+  - Receives the verification token as a query parameter.
+  - Calls `userService.verifyUser()` to handle the verification logic.
+  - Responds with a success message upon successful verification.
+
+---
+
+## 6. Best Practices and Advanced Features
+
+### Custom Query Methods
+
+Spring Data JPA allows the definition of custom query methods based on method naming conventions. This feature eliminates the need for writing boilerplate JPQL or SQL queries.
+
+**Example:**
+
+```java
+public interface UserRepository extends JpaRepository<User, Integer> {
+    Optional<User> findByEmail(String email);
+    List<User> findByFirstname(String firstname);
+    List<User> findByLastnameAndEmail(String lastname, String email);
+}
+```
+
+Spring Data JPA interprets these method names and automatically generates the corresponding queries.
+
+### Handling Optional Results
+
+The use of `Optional<T>` as return types in repository methods encourages handling of absent values gracefully, preventing `NullPointerException`s.
+
+**Example:**
+
+```java
+Optional<User> optionalUser = userRepository.findByEmail(email);
+if (optionalUser.isPresent()) {
+    User user = optionalUser.get();
+    // Proceed with user
+} else {
+    // Handle user not found
+}
+```
+
+Alternatively, you can use `orElseThrow` for concise exception handling:
+
+```java
+User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+```
+
+### Transactions
+
+Spring Data JPA methods are transactional by default. However, for complex operations that span multiple repository calls or require atomicity, you should explicitly define transactions.
+
+**Example:**
+
+```java
+@Service
+public class UserService {
+
+    // Inject repositories and other dependencies
+
+    @Transactional
+    public void performComplexOperation() {
+        // Multiple repository operations
+        // All operations succeed or fail together
+    }
+}
+```
+
+### Pagination and Sorting
+
+Repositories extending `JpaRepository` can utilize methods that support pagination and sorting.
+
+**Example:**
+
+```java
+public Page<User> getUsers(int page, int size, String sortBy) {
+    Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+    return userRepository.findAll(pageable);
+}
+```
+
+**Usage in Controller:**
+
+```java
+@GetMapping("/users")
+public ResponseEntity<Page<User>> getUsers(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(defaultValue = "id") String sortBy) {
+    Page<User> users = userService.getUsers(page, size, sortBy);
+    return ResponseEntity.ok(users);
+}
+```
+
+### Custom Queries with JPQL or Native SQL
+
+In cases where method naming conventions are insufficient, you can define custom queries using the `@Query` annotation.
+
+**Example:**
+
+```java
+public interface UserRepository extends JpaRepository<User, Integer> {
+
+    @Query("SELECT u FROM User u WHERE u.email LIKE %:domain")
+    List<User> findByEmailDomain(@Param("domain") String domain);
+}
+```
+
+**Usage:**
+
+```java
+List<User> usersWithGmail = userRepository.findByEmailDomain("gmail.com");
+```
+
+### Projections and DTOs
+
+To optimize performance and data transfer, use projections or Data Transfer Objects (DTOs) to fetch only necessary fields.
+
+**Example:**
+
+```java
+public interface UserSummary {
+    String getFirstname();
+    String getLastname();
+    String getEmail();
+}
+
+public interface UserRepository extends JpaRepository<User, Integer> {
+    List<UserSummary> findAllProjectedBy();
+}
+```
+
+**Usage:**
+
+```java
+List<UserSummary> summaries = userRepository.findAllProjectedBy();
+summaries.forEach(summary -> {
+    System.out.println(summary.getFirstname() + " " + summary.getLastname() + " - " + summary.getEmail());
+});
+```
+
+### Indexing and Performance Optimization
+
+Ensure that frequently queried fields (e.g., `email` in `User`, `name` in `Role`) are indexed in the database to improve query performance. This is already partially handled by JPA annotations like `@Column(unique = true)`, which often implies an index.
+
+**Example:**
+
+In the `Role` entity:
+
+```java
+@Column(unique = true, nullable = false)
+private String name;
+```
+
+This typically creates a unique index on the `name` column.
+
+### Exception Handling
+
+Implement robust exception handling strategies to manage scenarios like entity not found, data integrity violations, etc.
+
+**Example:**
+
+```java
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<String> handleUsernameNotFound(UsernameNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgs(IllegalArgumentException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    // Handle other exceptions
+}
+```
+
+### Unit and Integration Testing
+
+Test your repositories and services to ensure they function correctly.
+
+**Example:**
+
+**Repository Test Using H2 In-Memory Database:**
+
+```java
+@DataJpaTest
+public class UserRepositoryTest {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Test
+    public void testFindByEmail() {
+        User user = User.builder()
+                .firstname("Jane")
+                .lastname("Doe")
+                .email("jane.doe@example.com")
+                .password("password")
+                .enabled(true)
+                .build();
+        userRepository.save(user);
+
+        Optional<User> foundUser = userRepository.findByEmail("jane.doe@example.com");
+        assertTrue(foundUser.isPresent());
+        assertEquals("Jane", foundUser.get().getFirstname());
+    }
+}
+```
+
+**Explanation:**
+
+- **`@DataJpaTest`**: Configures an in-memory database, scans for `@Entity` classes, and configures Spring Data JPA repositories.
+- **Test Method**: Creates and saves a `User` entity, then retrieves it using `findByEmail()` to verify functionality.
+
+---
+
+## 7. Conclusion
+
+The repository interfaces `RoleRepository`, `TokenRepository`, and `UserRepository` are integral components of your Spring Boot application's data access layer. They leverage Spring Data JPA’s capabilities to provide robust, efficient, and easy-to-use mechanisms for interacting with the database.
+
+**Key Takeaways:**
+
+- **Leverage `JpaRepository`**: Extending `JpaRepository` provides a wealth of functionality out-of-the-box, reducing the need for boilerplate code.
+- **Use Method Naming Conventions**: Define custom query methods by following Spring Data JPA’s naming conventions, allowing for automatic query generation.
+- **Handle `Optional` Properly**: Use `Optional<T>` to handle potential `null` values gracefully.
+- **Integrate with Services and Controllers**: Repositories are typically used within service classes, which encapsulate business logic and are called by controllers handling HTTP requests.
+- **Follow Best Practices**: Implement proper exception handling, security measures, transaction management, and testing to ensure a robust application.
+
+By understanding and effectively utilizing Spring Data JPA repositories, you can build scalable and maintainable data access layers in your Spring Boot applications.
+
+---
+
+Feel free to ask if you need further clarification or more examples on any of these topics!
