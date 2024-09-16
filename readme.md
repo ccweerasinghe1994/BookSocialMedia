@@ -161,7 +161,7 @@
   - [7. **Security Configuration**](#7-security-configuration)
   - [8. **Database Schema Representation**](#8-database-schema-representation)
   - [9. **Conclusion and Best Practices**](#9-conclusion-and-best-practices)
-- [�Repository Layer for Role, Token and User Entities](#repository-layer-for-role-token-and-user-entities)
+- [📗Repository Layer for Role, Token and User Entities](#repository-layer-for-role-token-and-user-entities)
   - [Table of Contents](#table-of-contents-2)
   - [1. Understanding Spring Data JPA Repositories](#1-understanding-spring-data-jpa-repositories)
     - [What is Spring Data JPA?](#what-is-spring-data-jpa)
