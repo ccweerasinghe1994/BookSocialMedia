@@ -1,6 +1,6 @@
-# 📔📕📖📗📘📙📚📑🔖🧾Book Social Media📔📕📖📗📘📙📚📑🔖🧾
-- [📔📕📖📗📘📙📚📑🔖🧾Book Social Media📔📕📖📗📘📙📚📑🔖🧾](#book-social-media)
-- [👿pom.xml](#pomxml)
+# 📖📗📘📙🔖Book Social Media 📖📗📘📙🔖
+- [📖📗📘📙🔖Book Social Media 📖📗📘📙🔖](#book-social-media-)
+- [📗pom.xml](#pomxml)
   - [**1. Overview of `pom.xml`**](#1-overview-of-pomxml)
     - [**Key Sections:**](#key-sections)
   - [**2. Detailed Breakdown**](#2-detailed-breakdown)
@@ -35,7 +35,7 @@
     - [**6.5. Exception Handling**](#65-exception-handling)
     - [**6.6. Logging**](#66-logging)
   - [**7. Conclusion**](#7-conclusion)
-- [⭐adding docker compose to the project](#adding-docker-compose-to-the-project)
+- [📗adding docker compose to the project](#adding-docker-compose-to-the-project)
   - [**Table of Contents**](#table-of-contents)
   - [**1. Overview of Docker Compose**](#1-overview-of-docker-compose)
   - [**2. Detailed Breakdown of `docker-compose.yml`**](#2-detailed-breakdown-of-docker-composeyml)
@@ -102,7 +102,7 @@
     - [**5.11. Optimizing Docker Compose for Production**](#511-optimizing-docker-compose-for-production)
     - [**5.12. Using External Services and Integrations**](#512-using-external-services-and-integrations)
   - [**6. Conclusion**](#6-conclusion)
-- [🌍application.yml files](#applicationyml-files)
+- [📗application.yml files](#applicationyml-files)
   - [**Table of Contents**](#table-of-contents-1)
   - [**1. Overview of Spring Boot Configuration**](#1-overview-of-spring-boot-configuration)
   - [**2. Understanding `application.yml`**](#2-understanding-applicationyml)
@@ -129,12 +129,12 @@
     - [**6.4. Comprehensive Logging**](#64-comprehensive-logging)
   - [**7. Conclusion**](#7-conclusion-1)
   - [**8. Additional Resources**](#8-additional-resources)
-- [✈️Authentication Flow](#️authentication-flow)
+- [📗Authentication Flow](#authentication-flow)
     - [Flow Breakdown:](#flow-breakdown)
     - [`pom.xml` Correlation:](#pomxml-correlation)
     - [Example Code Snippets:](#example-code-snippets)
     - [Conclusion:](#conclusion)
-- [🌴User,Token and Role Entities](#usertoken-and-role-entities)
+- [📗User,Token and Role Entities](#usertoken-and-role-entities)
   - [1. **Main Application Class**](#1-main-application-class)
     - [**Code Overview**](#code-overview)
     - [**Explanation**](#explanation)
@@ -161,7 +161,7 @@
   - [7. **Security Configuration**](#7-security-configuration)
   - [8. **Database Schema Representation**](#8-database-schema-representation)
   - [9. **Conclusion and Best Practices**](#9-conclusion-and-best-practices)
-- [😊Repository Layer for Role, Token and User Entities](#repository-layer-for-role-token-and-user-entities)
+- [�Repository Layer for Role, Token and User Entities](#repository-layer-for-role-token-and-user-entities)
   - [Table of Contents](#table-of-contents-2)
   - [1. Understanding Spring Data JPA Repositories](#1-understanding-spring-data-jpa-repositories)
     - [What is Spring Data JPA?](#what-is-spring-data-jpa)
@@ -206,7 +206,7 @@
   - [7. Conclusion](#7-conclusion-2)
 
 
-# 👿pom.xml
+# 📗pom.xml
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1786,7 +1786,7 @@ By understanding each component and how they interrelate, you can effectively ma
 
 If you have specific areas you'd like to delve deeper into or additional questions about your project setup, feel free to ask!
 
-# ⭐adding docker compose to the project
+# 📗adding docker compose to the project
 
 ```yaml
 services:
@@ -3951,7 +3951,7 @@ By adhering to these practices and continuously refining your Docker Compose con
 
 Feel free to reach out if you have further questions or need assistance with specific configurations!
 
-# 🌍application.yml files
+# 📗application.yml files
 
 application.yml
 
@@ -5213,7 +5213,7 @@ To further enhance your understanding and application of Spring Boot configurati
 
 Feel free to explore these resources to deepen your understanding and enhance your application's capabilities.
 
-# ✈️Authentication Flow
+# 📗Authentication Flow
 
 ![alt text](image.png)
 
@@ -5399,7 +5399,7 @@ In the `pom.xml`, we see the following dependencies related to the flow describe
 This architecture provides robust security using JWT for authentication. It filters each request, validates tokens, fetches user details, and secures user contexts. All dependencies in the `pom.xml` support these processes, especially JWT handling (`jjwt`) and security (`spring-boot-starter-security`).
 
 
-# 🌴User,Token and Role Entities
+# 📗User,Token and Role Entities
 
 Certainly! Let's delve deeply into the provided Java code snippets, which form the backbone of a Spring Boot application centered around user management, roles, and token handling. We'll explore each component, understand their interactions, and provide examples to illustrate their functionality.
 
@@ -6182,7 +6182,7 @@ The provided code snippets form a solid foundation for a user management system 
 
 By adhering to these practices and continually refining the system based on requirements and feedback, you can build a robust and secure user management system within your Spring Boot application.
 
-# 😊Repository Layer for Role, Token and User Entities
+# 📗Repository Layer for Role, Token and User Entities
 
 
 ```java
