@@ -102,6 +102,7 @@
     - [**5.11. Optimizing Docker Compose for Production**](#511-optimizing-docker-compose-for-production)
     - [**5.12. Using External Services and Integrations**](#512-using-external-services-and-integrations)
   - [**6. Conclusion**](#6-conclusion)
+- [application.yml files](#applicationyml-files)
 
 
 # pom.xml
@@ -3848,3 +3849,26 @@ By adhering to these practices and continuously refining your Docker Compose con
 - [PostgreSQL Docker Image Documentation](https://hub.docker.com/_/postgres)
 
 Feel free to reach out if you have further questions or need assistance with specific configurations!
+
+# application.yml files
+
+application.yml
+
+```yml
+spring:
+  profiles:
+    active: dev
+  servlet:
+    multipart:
+      max-file-size: 50MB
+springdoc:
+  default-produces-media-type: application/json
+server:
+  servlet:
+    context-path: /api/v1/
+```
+
+application-dev.yml
+```yml
+
+```
