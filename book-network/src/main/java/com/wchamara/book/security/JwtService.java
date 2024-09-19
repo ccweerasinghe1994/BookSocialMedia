@@ -50,7 +50,7 @@ public class JwtService {
         return Jwts.parser().verifyWith(getSignedKey()).build().parseSignedClaims(token).getPayload();
     }
 
-    private String generateToken(Map<String, Object> claims, UserDetails userDetails) {
+    public String generateToken(Map<String, Object> claims, UserDetails userDetails) {
 
         return buildToke(claims, userDetails, jwtExpirationInMs);
     }

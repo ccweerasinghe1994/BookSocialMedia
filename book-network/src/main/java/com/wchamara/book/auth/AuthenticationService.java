@@ -4,6 +4,7 @@ import com.wchamara.book.email.EmailService;
 import com.wchamara.book.email.EmailTemplateName;
 import com.wchamara.book.role.Role;
 import com.wchamara.book.role.RoleRepository;
+import com.wchamara.book.security.JwtService;
 import com.wchamara.book.user.Token;
 import com.wchamara.book.user.TokenRepository;
 import com.wchamara.book.user.User;
@@ -11,11 +12,15 @@ import com.wchamara.book.user.UserRepository;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -27,6 +32,9 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+
     @Value("${application.mailing.frontend}")
     private String activationUrl;
 
@@ -61,7 +69,7 @@ public class AuthenticationService {
                 token,
                 "Account Activation"
         );
-        
+
     }
 
     private String generateAndSaveActivationToken(User user) {
@@ -91,5 +99,21 @@ public class AuthenticationService {
         }
 
         return codeBuilder.toString();
+    }
+
+    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
+
+        Authentication authenticate = authenticationManager.authenticate(authenticationToken);
+        var claims = new HashMap<String, Object>();
+
+        User user = (User) authenticate.getPrincipal();
+        claims.put("fullName", user.getFullName());
+
+        var jwtToken = jwtService.generateToken(claims, user);
+
+        return AuthenticationResponse.builder()
+                .token(jwtToken)
+                .build();
     }
 }
