@@ -31,7 +31,7 @@ spring:
 application:
   security:
     jwt:
-      secret-key: secret
+      secret-key: sG9aX8e4f2b3V0lZ5dK6hN8jP1rS3uX7cV2eM5oB9nT6wY4zQ1g
       expiration: 86400000
       token-prefix: Bearer
       header-string: Authorization
@@ -40,3 +40,7 @@ application:
 
 server:
   port: 8088
+logging:
+  level:
+    org:
+      springframework: debug

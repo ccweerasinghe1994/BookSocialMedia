@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -115,5 +116,27 @@ public class AuthenticationService {
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();
+    }
+
+    //    @Transactional
+    public void activateAccount(String token) throws MessagingException {
+        Token savedToken = tokenRepository.findByToken(token).orElseThrow(
+                () -> new RuntimeException("Invalid token")
+        );
+
+        if (savedToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            sendValidationEmail(savedToken.getUser());
+            throw new RuntimeException("Activation Token expired, new token will be sent to your email");
+        }
+
+        User user = userRepository.findById(savedToken.getUser().getId()).orElseThrow(
+                () -> new UsernameNotFoundException("User not found")
+        );
+
+        user.setEnabled(true);
+        userRepository.save(user);
+        savedToken.setValidatedAt(LocalDateTime.now());
+        tokenRepository.save(savedToken);
+
     }
 }

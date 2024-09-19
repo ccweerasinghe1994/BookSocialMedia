@@ -3,7 +3,6 @@ package com.wchamara.book.user;
 import com.wchamara.book.role.Role;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -108,7 +107,7 @@ public class User implements UserDetails, Principal {
      */
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return true;
     }
 
     /**
@@ -119,7 +118,7 @@ public class User implements UserDetails, Principal {
      */
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return true;
     }
 
     /**
@@ -131,7 +130,7 @@ public class User implements UserDetails, Principal {
      */
     @Override
     public boolean isCredentialsNonExpired() {
-        return false;
+        return true;
     }
 
     /**
