@@ -18,4 +18,21 @@ public class BookMapper {
                 .shareable(bookRequest.shareable())
                 .build();
     }
+
+    public BookResponse toBookResponse(Book book) {
+        return BookResponse
+                .builder()
+                .id(book.getId())
+                .title(book.getTitle())
+                .authorName(book.getAuthorName())
+                .isbn(book.getIsbn())
+                .synopsis(book.getSynopsis())
+                .owner(book.getOwner().getFullName())
+//                todo
+//                .cover(new byte[0])
+                .rating(book.getRating())
+                .archived(book.isArchived())
+                .sharable(book.isShareable())
+                .build();
+    }
 }

@@ -1,6 +1,7 @@
 package com.wchamara.book.book;
 
 import com.wchamara.book.user.User;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -20,5 +21,13 @@ public class BookService {
         book.setOwner(user);
 
         return bookRepository.save(book).getId();
+    }
+
+    public BookResponse getBookById(Integer bookId) {
+
+        return bookRepository
+                .findById(bookId)
+                .map(bookMapper::toBookResponse)
+                .orElseThrow(() -> new EntityNotFoundException("No Book found with id: " + bookId));
     }
 }
