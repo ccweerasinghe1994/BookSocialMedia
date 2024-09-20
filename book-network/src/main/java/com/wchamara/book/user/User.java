@@ -1,5 +1,7 @@
 package com.wchamara.book.user;
 
+import com.wchamara.book.book.Book;
+import com.wchamara.book.history.BookTransactionHistory;
 import com.wchamara.book.role.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -53,6 +55,12 @@ public class User implements UserDetails, Principal {
 
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Role> roles;
+
+    @OneToMany(mappedBy = "owner")
+    private List<Book> books;
+
+    @OneToMany(mappedBy = "user")
+    private List<BookTransactionHistory> histories;
 
     /**
      * Returns the name of this {@code Principal}.

@@ -1,23 +1,29 @@
 package com.wchamara.book.book;
 
-import jakarta.persistence.Column;
+import com.wchamara.book.common.BaseEntity;
+import com.wchamara.book.feedback.Feedback;
+import com.wchamara.book.history.BookTransactionHistory;
+import com.wchamara.book.user.User;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
+@Getter
+@Setter
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
+public class Book extends BaseEntity {
 
-public class Book {
-
-    @Id
-    @GeneratedValue
-    private Integer id;
 
     private String title;
 
@@ -33,19 +39,13 @@ public class Book {
 
     private boolean shareable;
 
-    @CreatedDate
-    @Column(updatable = false, nullable = false)
-    private LocalDateTime createdDate;
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
 
-    @LastModifiedDate
-    @Column(insertable = false)
-    private LocalDateTime lastModifiedDate;
+    @OneToMany(mappedBy = "book")
+    private List<Feedback> feedbacks;
 
-    @CreatedBy
-    @Column(updatable = false, nullable = false)
-    private Integer createdBy;
-
-    @LastModifiedBy
-    @Column(insertable = false)
-    private Integer lastModifiedBy;
+    @OneToMany(mappedBy = "book")
+    private List<BookTransactionHistory> histories;
 }
