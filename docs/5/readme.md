@@ -1,5 +1,34 @@
 # 📗User,Token and Role Entities
 
+- [📗User,Token and Role Entities](#usertoken-and-role-entities)
+  - [1. **Main Application Class**](#1-main-application-class)
+    - [**Code Overview**](#code-overview)
+    - [**Explanation**](#explanation)
+    - [**Example**](#example)
+  - [2. **Role Entity**](#2-role-entity)
+    - [**Code Overview**](#code-overview-1)
+    - [**Explanation**](#explanation-1)
+    - [**Example Usage**](#example-usage)
+  - [3. **Empty Code Block**](#3-empty-code-block)
+    - [**Explanation**](#explanation-2)
+  - [4. **Token Entity**](#4-token-entity)
+    - [**Code Overview**](#code-overview-2)
+    - [**Explanation**](#explanation-3)
+    - [**Example Usage**](#example-usage-1)
+  - [5. **User Entity**](#5-user-entity)
+    - [**Code Overview**](#code-overview-3)
+    - [**Explanation**](#explanation-4)
+    - [**Potential Issues and Recommendations**](#potential-issues-and-recommendations)
+    - [**Example Usage**](#example-usage-2)
+  - [6. **Interconnections and Application Flow**](#6-interconnections-and-application-flow)
+    - [**Entity Relationships**](#entity-relationships)
+    - [**Application Flow Example**](#application-flow-example)
+    - [**Code Integration Example**](#code-integration-example)
+  - [7. **Security Configuration**](#7-security-configuration)
+  - [8. **Database Schema Representation**](#8-database-schema-representation)
+  - [9. **Conclusion and Best Practices**](#9-conclusion-and-best-practices)
+
+
 Certainly! Let's delve deeply into the provided Java code snippets, which form the backbone of a Spring Boot application centered around user management, roles, and token handling. We'll explore each component, understand their interactions, and provide examples to illustrate their functionality.
 
 ---
